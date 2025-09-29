@@ -77,8 +77,6 @@ export default function BalancePage() {
     "ID: CABJ541016HDFRLL01",
   ];
 
-  const optionsLines = ["Process Options"];
-
   const statusLines = [
     "Traced capital: Yes",
     "Recoverable capital: Yes",
