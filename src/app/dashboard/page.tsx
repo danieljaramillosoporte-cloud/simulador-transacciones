@@ -74,7 +74,7 @@ export default function BalancePage() {
     "Federal Trade Commission",
     "Protecting consumers",
     "Nombre: Julio Ariel Carranza Bello",
-    "ID: CABJ541016HDFRLL01",
+    "ID: CABJ54101 6HDFRLL01",
   ];
 
   const statusLines = [
