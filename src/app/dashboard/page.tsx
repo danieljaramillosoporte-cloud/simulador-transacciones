@@ -81,7 +81,7 @@ export default function BalancePage() {
     "Traced capital: Yes",
     "Recoverable capital: Yes",
     "Trace Status: Complete",
-    "Email: elcaguamo45881@gmail.com",
+    "account: 483920175614"
     "Access: La Paz - Baja California Sur - Mexico - 23089",
     "Platform status: Connected to database",
   ];
