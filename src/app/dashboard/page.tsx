@@ -73,7 +73,7 @@ export default function BalancePage() {
   const headerLines = [
     "Federal Trade Commission",
     "Protecting consumers",
-    "Nombre: Julio Ariel Carranza Belo",
+    "Nombre: Julio Ariel Carranza Bello",
     "ID: CABJ541016HDFRLL01",
   ];
 
@@ -83,11 +83,10 @@ export default function BalancePage() {
     "Traced capital: Yes",
     "Recoverable capital: Yes",
     "Trace Status: Complete",
-    "Email: mhlamas5@gmail.com",
+    "Email: elcaguamo45881@gmail.com",
     "Access: La Paz - Baja California Sur - Mexico - 23089",
     "Platform status: Connected to database",
   ];
-
   const balanceLines = ["Total: $95.874"];
 
   return (
