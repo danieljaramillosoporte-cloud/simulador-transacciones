@@ -96,10 +96,6 @@ export default function BalancePage() {
             <TypewriterBlock lines={headerLines} speed={60} />
           </div>
 
-          <div>
-            <TypewriterBlock lines={optionsLines} speed={60} />
-          </div>
-
           <div className="text-right">
             <TypewriterBlock lines={statusLines} speed={60} />
           </div>
