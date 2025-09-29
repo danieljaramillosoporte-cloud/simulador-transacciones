@@ -87,7 +87,7 @@ export default function BalancePage() {
     "Access: La Paz - Baja California Sur - Mexico - 23089",
     "Platform status: Connected to database",
   ];
-  const balanceLines = ["Total: $95.874"];
+  const balanceLines = ["Total: $17.800"];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-green-400 font-mono p-8">
