@@ -81,7 +81,7 @@ export default function BalancePage() {
     "Traced capital: Yes",
     "Recoverable capital: Yes",
     "Trace Status: Complete",
-    "account: 483920175615"
+    "account: 483920175615",
     "Access: La Paz - Baja California Sur - Mexico - 23089",
     "Platform status: Connected to database",
   ];
