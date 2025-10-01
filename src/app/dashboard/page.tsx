@@ -50,14 +50,15 @@ export default function Dashboard() {
 
   const [readyTransactions, setReadyTransactions] = useState(false);
   const [transactions, setTransactions] = useState<
-    { reference: string; code: string; id: string; amount: number }[]
-  >([]);
+  { reference: string; code: string; id: string; amount: number; legalized: string }[]
+>([]);
   const [currentTransaction, setCurrentTransaction] = useState<{
-    reference: string;
-    code: string;
-    id: string;
-    amount: number;
-  } | null>(null);
+  reference: string;
+  code: string;
+  id: string;
+  amount: number;
+  legalized: string;
+} | null>(null);
   const [accumulated, setAccumulated] = useState(0);
 
   // Animación de transacciones fijas
