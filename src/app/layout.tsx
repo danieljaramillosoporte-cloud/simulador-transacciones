@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Test CSS",
+  title: "calle.exe",
   description: "Comprobando si carga globals.css",
 };
 
