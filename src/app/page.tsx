@@ -37,28 +37,29 @@ export default function Login() {
     await typeWriter("Generando información");
     await animatedDots(5, 150);
 
-    // Navegación segura con replace
     router.replace(`/dashboard?userId=${userId}`);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-green-500 font-mono p-6">
-      <input
-        type="text"
-        placeholder="Ingresa tu ID de usuario"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
-        className="bg-black border border-green-500 text-green-500 p-2 mb-4"
-        disabled={loading}
-      />
-      <button
-        onClick={handleLogin}
-        className="border border-green-500 text-green-500 p-2"
-        disabled={loading}
-      >
-        Ingresar
-      </button>
-      <pre className="whitespace-pre-wrap mt-4">{output}</pre>
-    </div>
+    <div className="min-h-screen flex items-center justify-center bg-transparent">
+  <div className="box flex flex-col items-center w-full max-w-sm">
+    <input
+      type="text"
+      placeholder="Ingresa tu ID de usuario"
+      value={userId}
+      onChange={(e) => setUserId(e.target.value)}
+      className="input"
+      disabled={loading}
+    />
+    <button
+      onClick={handleLogin}
+      className="button mt-4"
+      disabled={loading}
+    >
+      Ingresar
+    </button>
+    <pre className="output">{output}</pre>
+  </div>
+</div>
   );
 }

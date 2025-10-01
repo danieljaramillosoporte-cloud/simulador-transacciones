@@ -2,27 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ====== ESTILOS GLOBALES ====== */
-html {
-  @apply min-h-screen bg-gradient-to-b from-black to-gray-900 text-green-400 font-mono;
+/* ====== FONDO GLOBAL HUD ====== */
+html, body {
+  @apply min-h-screen text-white font-mono;
+  background-color: #2f3e4a; /* color base del fondo */
+
+  background-image:
+    /* overlay translúcido que tiñe la imagen */
+    linear-gradient(rgba(47,62,74,0.7), rgba(47,62,74,0.8)),
+    /* imagen centrada */
+    url('/images/img.png'),
+    /* grid fino (10px) */
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+    /* grid grueso (50px) */
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px),
+    /* estrellas en intersecciones */
+    radial-gradient(circle, rgba(255,255,255,0.25) 1px, transparent 1px);
+
+  /* tamaños de cada capa */
+  background-size:
+    cover,        /* overlay ocupa toda el área */
+    900px auto,   /* imagen centrada, tamaño grande */
+    10px 10px, 10px,
+    50px 50px, 50px,
+    50px 50px;
+
+  /* posiciones de cada capa */
+  background-position:
+    center,       /* overlay centrado */
+    center,       /* imagen centrada */
+    0 0, 0 0,
+    0 0, 0 0,
+    0 0;
+
+  /* repetición de cada capa */
+  background-repeat:
+    no-repeat,    /* overlay */
+    no-repeat,    /* imagen */
+    repeat, repeat,
+    repeat, repeat,
+    repeat;
+
+  background-blend-mode: normal; /* el overlay se mezcla con la imagen */
 }
 
-button {
-  @apply w-full border border-green-500 text-green-400 py-2 px-4 rounded-md
-    hover:bg-green-500 hover:text-black transition-all duration-200
-    shadow-[0_0_10px_rgba(0,255,0,0.6)];
+
+
+/* ====== BOX HUD STYLE ====== */
+.box {
+  @apply relative rounded-md p-6 text-white;
+  background: rgba(255,255,255,0.05); /* fondo translúcido */
+  border: 1px solid white; /* borde blanco */
+  box-shadow: 0 0 15px rgba(255,255,255,0.15);
 }
 
-pre {
-  @apply whitespace-pre-wrap;
+/* Esquinas tipo HUD */
+.box::before,
+.box::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid white;
 }
 
-/* Cursor parpadeante */
-.cursor {
-  animation: blink 1s infinite;
+.box::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
 }
 
-@keyframes blink {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0; }
+.box::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+.input {
+  @apply w-full rounded-md p-2 bg-white bg-opacity-10 text-white border border-white border-opacity-50;
+}
+
+.button {
+  @apply rounded-md p-2 bg-white bg-opacity-10 text-white border border-white border-opacity-50 cursor-pointer;
+}
+
+.button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.output {
+  @apply mt-4 whitespace-pre-wrap text-white;
 }
