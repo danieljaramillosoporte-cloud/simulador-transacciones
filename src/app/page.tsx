@@ -13,6 +13,7 @@ export default function Login() {
       setOutput((prev) => prev + text[i]);
       await new Promise((r) => setTimeout(r, speed));
     }
+    setOutput((prev) => prev + "\n");
   };
 
   const animatedDots = async (times = 5, speed = 300) => {
@@ -23,43 +24,56 @@ export default function Login() {
     setOutput((prev) => prev + "\n");
   };
 
-  const handleLogin = async () => {
-    if (!userId.trim()) return alert("Ingresa un ID de usuario");
-    setOutput("");
-    setLoading(true);
+const handleLogin = async () => {
+  if (!userId.trim()) return alert("Ingresa tu CURP");
+  setOutput("");
+  setLoading(true);
 
-    await typeWriter(`Buscando usuario con ID: ${userId}`);
-    await animatedDots();
+  await typeWriter(`Buscando usuario con CURP: ${userId}`);
+  await animatedDots();
 
-    await typeWriter("Buscando transacciones");
-    await animatedDots(5, 200);
+  try {
+    const res = await fetch(`/api/user/${userId}`);
+    const user = await res.json();
 
+    if (user.error) {
+      await typeWriter("❌ Usuario no encontrado");
+      setLoading(false);
+      return;
+    }
+
+    await typeWriter("✅ Usuario encontrado");
     await typeWriter("Generando información");
     await animatedDots(5, 150);
 
-    router.replace(`/dashboard?userId=${userId}`);
-  };
+    // ✅ redirige con curp en vez de id
+    router.replace(`/dashboard?curp=${user.curp}`);
+  } catch (err) {
+    await typeWriter("⚠️ Error de conexión con el servidor");
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent">
-  <div className="box flex flex-col items-center w-full max-w-sm">
-    <input
-      type="text"
-      placeholder="Ingresa tu ID de usuario"
-      value={userId}
-      onChange={(e) => setUserId(e.target.value)}
-      className="input"
-      disabled={loading}
-    />
-    <button
-      onClick={handleLogin}
-      className="button mt-4"
-      disabled={loading}
-    >
-      Ingresar
-    </button>
-    <pre className="output">{output}</pre>
-  </div>
-</div>
+      <div className="box flex flex-col items-center w-full max-w-sm">
+        <input
+          type="text"
+          placeholder="Ingresa tu CURP"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          className="input"
+          disabled={loading}
+        />
+        <button
+          onClick={handleLogin}
+          className="button mt-4"
+          disabled={loading}
+        >
+          Ingresar
+        </button>
+        <pre className="output">{output}</pre>
+      </div>
+    </div>
   );
 }

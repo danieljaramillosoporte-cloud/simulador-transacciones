@@ -97,3 +97,55 @@ html, body {
 .output {
   @apply mt-4 whitespace-pre-wrap text-white;
 }
+
+/* ====== ANIMACIONES HUD ====== */
+
+/* Aparición suave (para botones o secciones) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+/* Aparición con retraso (para Verify Identity) */
+@keyframes fadeInDelay {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-fadeInDelay {
+  animation: fadeInDelay 1s ease-out 1s forwards;
+}
+
+/* Efecto de pulso sutil para botones importantes */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.1);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255,255,255,0.4), 0 0 30px rgba(255,255,255,0.2);
+  }
+}
+
+.glow-pulse {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
