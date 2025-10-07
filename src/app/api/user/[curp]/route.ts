@@ -3,9 +3,11 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function GET(req: Request, { params }: { params: { curp: string } }) {
+export async function GET(req: Request, context: { params: Promise<{ curp: string }> }) {
+  const { curp } = await context.params; // 👈 cambia esto
+
   const user = await prisma.user.findUnique({
-    where: { curp: params.curp },
+    where: { curp },
     include: { transactions: true },
   });
 
@@ -13,5 +15,5 @@ export async function GET(req: Request, { params }: { params: { curp: string } }
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json(user); // 👈 aquí ya viene legalDocumentUrl
+  return NextResponse.json(user);
 }
