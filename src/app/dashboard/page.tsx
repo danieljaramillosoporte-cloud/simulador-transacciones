@@ -10,6 +10,5 @@ export default function DashboardPage() {
 
   if (!curp) return <div className="p-8">❌ No se recibió CURP</div>;
 
-
   return <UserDashboard curp={curp} />;
 }
