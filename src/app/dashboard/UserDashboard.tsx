@@ -10,8 +10,18 @@ interface Transaction {
   amount: number;
 }
 
+interface User {
+  id: number;
+  name: string;
+  curp: string;
+  email?: string;
+  country?: string;
+  totalAmount?: number;
+  legalDocumentUrl?: string;
+}
+
 export default function UserDashboard({ curp }: { curp: string }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentTransaction, setCurrentTransaction] = useState<Transaction | null>(null);
   const [typedTransaction, setTypedTransaction] = useState({
@@ -64,7 +74,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
   const generateTransactionAmounts = (numTxs: number) => {
     const randNums: number[] = Array.from({ length: numTxs }, () => Math.random());
     const sum = randNums.reduce((a, b) => a + b, 0);
-    let amounts = randNums.map((n) => Math.max(MIN_TX, Math.round((n / sum) * TOTAL_AMOUNT)));
+    const amounts = randNums.map((n) => Math.max(MIN_TX, Math.round((n / sum) * TOTAL_AMOUNT)));
     const diff = TOTAL_AMOUNT - amounts.reduce((a, b) => a + b, 0);
     amounts[amounts.length - 1] += diff;
     return amounts;
@@ -80,25 +90,24 @@ export default function UserDashboard({ curp }: { curp: string }) {
     }
   };
 
-   useEffect(() => {
-  if (finishedTransactions) {
-    const trace = document.querySelector(".trace-status");
-    const recover = document.querySelector(".recoverable-status");
+  useEffect(() => {
+    if (finishedTransactions) {
+      const trace = document.querySelector(".trace-status");
+      const recover = document.querySelector(".recoverable-status");
 
-    if (trace) trace.innerHTML = "Complete";
-    if (recover) recover.innerHTML = "YES";
+      if (trace) trace.innerHTML = "Complete";
+      if (recover) recover.innerHTML = "YES";
 
-    trace?.classList.remove("text-yellow-400");
-    recover?.classList.remove("text-yellow-400");
+      trace?.classList.remove("text-yellow-400");
+      recover?.classList.remove("text-yellow-400");
 
-    trace?.classList.add("text-green-400", "font-bold");
-    recover?.classList.add("text-green-400", "font-bold");
-  }
-}, [finishedTransactions]);
+      trace?.classList.add("text-green-400", "font-bold");
+      recover?.classList.add("text-green-400", "font-bold");
+    }
+  }, [finishedTransactions]);
 
   useEffect(() => {
-    if (!finishedBoxes) return;
-    if (finishedTransactions) return;
+    if (!finishedBoxes || finishedTransactions) return;
 
     if (numTransactions === null) {
       setNumTransactions(calcNumTransactions());
@@ -111,7 +120,6 @@ export default function UserDashboard({ curp }: { curp: string }) {
     const generateNext = async () => {
       if (i >= amounts.length) {
         setFinishedTransactions(true);
-        // 👇 Después de terminar transacciones, esperamos 1s y mostramos Verify Identity
         setTimeout(() => setShowVerifyButton(true), 1000);
         return;
       }
@@ -140,7 +148,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
     };
 
     generateNext();
-  }, [finishedBoxes, numTransactions, finishedTransactions]);
+  }, [finishedBoxes, numTransactions, finishedTransactions, calcNumTransactions, generateTransactionAmounts]);
 
   if (!user) {
     return <div className="p-8 text-center text-lg">Cargando información del cliente...</div>;
