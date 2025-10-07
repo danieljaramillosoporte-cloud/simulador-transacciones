@@ -58,9 +58,9 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
   const TOTAL_AMOUNT = user?.totalAmount ?? 10000;
   const MIN_TX = 100;
-  const MAX_TX = 7000;
+  const MAX_TX = 20000;
   const MIN_NUM_TX = 15;
-  const MAX_NUM_TX = 30;
+  const MAX_NUM_TX = 25;
 
   const calcNumTransactions = () => {
     const minTxs = Math.ceil(TOTAL_AMOUNT / MAX_TX);
@@ -91,65 +91,85 @@ export default function UserDashboard({ curp }: { curp: string }) {
   };
 
   useEffect(() => {
-    if (finishedTransactions) {
-      const trace = document.querySelector(".trace-status");
-      const recover = document.querySelector(".recoverable-status");
+  if (!user || !finishedBoxes) return;
 
-      if (trace) trace.innerHTML = "Complete";
-      if (recover) recover.innerHTML = "YES";
+  const fetchTransactions = async () => {
+    try {
+      // 1️⃣ Traer transacciones reales
+      const res = await fetch(`/api/transactions?curp=${user.curp}`);
+      const data: Transaction[] = await res.json();
 
-      trace?.classList.remove("text-yellow-400");
-      recover?.classList.remove("text-yellow-400");
-
-      trace?.classList.add("text-green-400", "font-bold");
-      recover?.classList.add("text-green-400", "font-bold");
-    }
-  }, [finishedTransactions]);
-
-  useEffect(() => {
-    if (!finishedBoxes || finishedTransactions) return;
-
-    if (numTransactions === null) {
-      setNumTransactions(calcNumTransactions());
-      return;
-    }
-
-    const amounts = generateTransactionAmounts(numTransactions);
-    let i = 0;
-
-    const generateNext = async () => {
-      if (i >= amounts.length) {
+      if (data.length > 0) {
+        // ✅ Si existen transacciones reales
+        setTransactions(data);
+        const total = data.reduce((sum, tx) => sum + tx.amount, 0);
+        setAccumulated(total);
         setFinishedTransactions(true);
-        setTimeout(() => setShowVerifyButton(true), 1000);
-        return;
+        setShowVerifyButton(true);
+      } else {
+        // ⚡ No hay transacciones, generar aleatorias
+        const TOTAL_AMOUNT = user.totalAmount ?? 10000;
+        const MIN_TX = 100;
+        const MAX_TX = 20000;
+        const MIN_NUM_TX = 15;
+        const MAX_NUM_TX = 25;
+
+        const numTxs = Math.min(
+          MAX_NUM_TX,
+          Math.max(
+            MIN_NUM_TX,
+            Math.ceil(TOTAL_AMOUNT / MAX_TX) +
+              Math.floor(Math.random() * (Math.floor(TOTAL_AMOUNT / MIN_TX) - Math.ceil(TOTAL_AMOUNT / MAX_TX) + 1))
+          )
+        );
+
+        const randNums: number[] = Array.from({ length: numTxs }, () => Math.random());
+        const sum = randNums.reduce((a, b) => a + b, 0);
+        const amounts = randNums.map((n) => Math.max(MIN_TX, Math.round((n / sum) * TOTAL_AMOUNT)));
+        const diff = TOTAL_AMOUNT - amounts.reduce((a, b) => a + b, 0);
+        amounts[amounts.length - 1] += diff;
+
+        // Animación Typewriter
+        let i = 0;
+        const generateNext = async () => {
+          if (i >= amounts.length) {
+            setFinishedTransactions(true);
+            setTimeout(() => setShowVerifyButton(true), 1000);
+            return;
+          }
+
+          const amount = amounts[i];
+          const newTx: Transaction = {
+            reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
+            code: Math.random().toString(36).substring(2, 6).toUpperCase(),
+            id: Math.random().toString(36).substring(2, 10),
+            amount,
+          };
+
+          setCurrentTransaction(newTx);
+          setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
+
+          await typeField("reference", newTx.reference);
+          await typeField("code", newTx.code);
+          await typeField("id", newTx.id);
+          await typeField("amount", "$" + newTx.amount.toLocaleString());
+
+          setTransactions((prev) => [...prev, newTx]);
+          setAccumulated((prev) => prev + amount);
+
+          i++;
+          generateNext();
+        };
+
+        generateNext();
       }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
 
-      const amount = amounts[i];
-      const newTx: Transaction = {
-        reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        code: Math.random().toString(36).substring(2, 6).toUpperCase(),
-        id: Math.random().toString(36).substring(2, 10),
-        amount,
-      };
-
-      setCurrentTransaction(newTx);
-      setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
-
-      await typeField("reference", newTx.reference);
-      await typeField("code", newTx.code);
-      await typeField("id", newTx.id);
-      await typeField("amount", "$" + newTx.amount.toLocaleString());
-
-      setTransactions((prev) => [...prev, newTx]);
-      setAccumulated((prev) => prev + amount);
-
-      i++;
-      generateNext();
-    };
-
-    generateNext();
-  }, [finishedBoxes, numTransactions, finishedTransactions, calcNumTransactions, generateTransactionAmounts]);
-
+  fetchTransactions();
+}, [user, finishedBoxes]);
   if (!user) {
     return <div className="p-8 text-center text-lg">Cargando información del cliente...</div>;
   }
