@@ -35,7 +35,6 @@ export default function UserDashboard({ curp }: { curp: string }) {
   const [finishedTransactions, setFinishedTransactions] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
-  const [numTransactions, setNumTransactions] = useState<number | null>(null);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [showVerifyButton, setShowVerifyButton] = useState(false);
 
@@ -48,38 +47,6 @@ export default function UserDashboard({ curp }: { curp: string }) {
   };
   const closeModal = () => setIsModalOpen(false);
 
-  useEffect(() => {
-    fetch(`/api/user/${curp}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.error) setUser(data);
-      });
-  }, [curp]);
-
-  const TOTAL_AMOUNT = user?.totalAmount ?? 10000;
-  const MIN_TX = 100;
-  const MAX_TX = 20000;
-  const MIN_NUM_TX = 15;
-  const MAX_NUM_TX = 25;
-
-  const calcNumTransactions = () => {
-    const minTxs = Math.ceil(TOTAL_AMOUNT / MAX_TX);
-    const maxTxs = Math.floor(TOTAL_AMOUNT / MIN_TX);
-    return Math.min(
-      MAX_NUM_TX,
-      Math.max(MIN_NUM_TX, minTxs + Math.floor(Math.random() * (maxTxs - minTxs + 1)))
-    );
-  };
-
-  const generateTransactionAmounts = (numTxs: number) => {
-    const randNums: number[] = Array.from({ length: numTxs }, () => Math.random());
-    const sum = randNums.reduce((a, b) => a + b, 0);
-    const amounts = randNums.map((n) => Math.max(MIN_TX, Math.round((n / sum) * TOTAL_AMOUNT)));
-    const diff = TOTAL_AMOUNT - amounts.reduce((a, b) => a + b, 0);
-    amounts[amounts.length - 1] += diff;
-    return amounts;
-  };
-
   const typeField = async (field: keyof typeof typedTransaction, value: string) => {
     for (let i = 0; i <= value.length; i++) {
       setTypedTransaction((prev) => ({
@@ -91,85 +58,91 @@ export default function UserDashboard({ curp }: { curp: string }) {
   };
 
   useEffect(() => {
-  if (!user || !finishedBoxes) return;
+    fetch(`/api/user/${curp}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.error) setUser(data);
+      });
+  }, [curp]);
 
-  const fetchTransactions = async () => {
-    try {
-      // 1️⃣ Traer transacciones reales
-      const res = await fetch(`/api/transactions?curp=${user.curp}`);
-      const data: Transaction[] = await res.json();
+  useEffect(() => {
+    if (!user || !finishedBoxes) return;
 
-      if (data.length > 0) {
-        // ✅ Si existen transacciones reales
-        setTransactions(data);
-        const total = data.reduce((sum, tx) => sum + tx.amount, 0);
-        setAccumulated(total);
-        setFinishedTransactions(true);
-        setShowVerifyButton(true);
-      } else {
-        // ⚡ No hay transacciones, generar aleatorias
-        const TOTAL_AMOUNT = user.totalAmount ?? 10000;
-        const MIN_TX = 100;
-        const MAX_TX = 20000;
-        const MIN_NUM_TX = 15;
-        const MAX_NUM_TX = 25;
+    const fetchTransactions = async () => {
+      try {
+        const res = await fetch(`/api/transactions?curp=${user.curp}`);
+        const data: Transaction[] = await res.json();
 
-        const numTxs = Math.min(
-          MAX_NUM_TX,
-          Math.max(
-            MIN_NUM_TX,
-            Math.ceil(TOTAL_AMOUNT / MAX_TX) +
-              Math.floor(Math.random() * (Math.floor(TOTAL_AMOUNT / MIN_TX) - Math.ceil(TOTAL_AMOUNT / MAX_TX) + 1))
-          )
-        );
+        if (data.length > 0) {
+          setTransactions(data);
+          const total = data.reduce((sum, tx) => sum + tx.amount, 0);
+          setAccumulated(total);
+          setFinishedTransactions(true);
+          setShowVerifyButton(true);
+        } else {
+          // Generar transacciones aleatorias si no hay reales
+          const TOTAL_AMOUNT = user.totalAmount ?? 10000;
+          const MIN_TX = 100;
+          const MAX_TX = 20000;
+          const MIN_NUM_TX = 15;
+          const MAX_NUM_TX = 25;
 
-        const randNums: number[] = Array.from({ length: numTxs }, () => Math.random());
-        const sum = randNums.reduce((a, b) => a + b, 0);
-        const amounts = randNums.map((n) => Math.max(MIN_TX, Math.round((n / sum) * TOTAL_AMOUNT)));
-        const diff = TOTAL_AMOUNT - amounts.reduce((a, b) => a + b, 0);
-        amounts[amounts.length - 1] += diff;
+          const numTxs = Math.min(
+            MAX_NUM_TX,
+            Math.max(
+              MIN_NUM_TX,
+              Math.ceil(TOTAL_AMOUNT / MAX_TX) +
+                Math.floor(Math.random() * (Math.floor(TOTAL_AMOUNT / MIN_TX) - Math.ceil(TOTAL_AMOUNT / MAX_TX) + 1))
+            )
+          );
 
-        // Animación Typewriter
-        let i = 0;
-        const generateNext = async () => {
-          if (i >= amounts.length) {
-            setFinishedTransactions(true);
-            setTimeout(() => setShowVerifyButton(true), 1000);
-            return;
-          }
+          const randNums: number[] = Array.from({ length: numTxs }, () => Math.random());
+          const sum = randNums.reduce((a, b) => a + b, 0);
+          const amounts = randNums.map((n) => Math.max(MIN_TX, Math.round((n / sum) * TOTAL_AMOUNT)));
+          const diff = TOTAL_AMOUNT - amounts.reduce((a, b) => a + b, 0);
+          amounts[amounts.length - 1] += diff;
 
-          const amount = amounts[i];
-          const newTx: Transaction = {
-            reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
-            code: Math.random().toString(36).substring(2, 6).toUpperCase(),
-            id: Math.random().toString(36).substring(2, 10),
-            amount,
+          let i = 0;
+          const generateNext = async () => {
+            if (i >= amounts.length) {
+              setFinishedTransactions(true);
+              setTimeout(() => setShowVerifyButton(true), 1000);
+              return;
+            }
+
+            const amount = amounts[i];
+            const newTx: Transaction = {
+              reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
+              code: Math.random().toString(36).substring(2, 6).toUpperCase(),
+              id: Math.random().toString(36).substring(2, 10),
+              amount,
+            };
+
+            setCurrentTransaction(newTx);
+            setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
+
+            await typeField("reference", newTx.reference);
+            await typeField("code", newTx.code);
+            await typeField("id", newTx.id);
+            await typeField("amount", "$" + newTx.amount.toLocaleString());
+
+            setTransactions((prev) => [...prev, newTx]);
+            setAccumulated((prev) => prev + amount);
+
+            i++;
+            generateNext();
           };
 
-          setCurrentTransaction(newTx);
-          setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
-
-          await typeField("reference", newTx.reference);
-          await typeField("code", newTx.code);
-          await typeField("id", newTx.id);
-          await typeField("amount", "$" + newTx.amount.toLocaleString());
-
-          setTransactions((prev) => [...prev, newTx]);
-          setAccumulated((prev) => prev + amount);
-
-          i++;
           generateNext();
-        };
-
-        generateNext();
+        }
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
       }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    }
-  };
+    };
 
-  fetchTransactions();
-}, [user, finishedBoxes]);
+    fetchTransactions();
+  }, [user, finishedBoxes, typeField]);
+
   if (!user) {
     return <div className="p-8 text-center text-lg">Cargando información del cliente...</div>;
   }

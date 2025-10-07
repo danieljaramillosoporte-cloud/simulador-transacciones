@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Transaction } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const transactions = await prisma.transaction.findMany({
+    const transactions: Transaction[] = await prisma.transaction.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       select: {
@@ -34,8 +34,8 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(transactions);
-  } catch (error: any) {
-    console.error("Error fetching transactions:", error);
+  } catch (error: unknown) {
+    console.error("Error fetching transactions:", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   } finally {
     await prisma.$disconnect();
@@ -44,13 +44,19 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body: {
+      reference?: string;
+      code?: string;
+      amount?: number;
+      legalized?: boolean;
+      userId?: string;
+    } = await req.json();
 
     if (!body.reference || !body.code || !body.amount || !body.userId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const tx = await prisma.transaction.create({
+    const tx: Transaction = await prisma.transaction.create({
       data: {
         reference: body.reference,
         code: body.code,
@@ -61,8 +67,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(tx);
-  } catch (error: any) {
-    console.error("Error creating transaction:", error);
+  } catch (error: unknown) {
+    console.error("Error creating transaction:", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   } finally {
     await prisma.$disconnect();
