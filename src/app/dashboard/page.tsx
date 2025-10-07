@@ -1,7 +1,7 @@
 // app/dashboard/page.tsx
 "use client";
 import { useSearchParams } from "next/navigation";
-import UserDashboard from "./UserDashboard.tsx";
+import UserDashboard from "./UserDashboard";
 
 
 export default function DashboardPage() {
