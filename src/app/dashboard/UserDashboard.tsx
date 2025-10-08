@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Typewriter from "typewriter-effect";
 
 interface Transaction {
@@ -47,7 +47,8 @@ export default function UserDashboard({ curp }: { curp: string }) {
   };
   const closeModal = () => setIsModalOpen(false);
 
-  const typeField = async (field: keyof typeof typedTransaction, value: string) => {
+  const typeField = useCallback(
+  async (field: keyof typeof typedTransaction, value: string) => {
     for (let i = 0; i <= value.length; i++) {
       setTypedTransaction((prev) => ({
         ...prev,
@@ -55,7 +56,9 @@ export default function UserDashboard({ curp }: { curp: string }) {
       }));
       await new Promise((res) => setTimeout(res, 50));
     }
-  };
+  },
+  [setTypedTransaction]
+);
 
   useEffect(() => {
     fetch(`/api/user/${curp}`)
@@ -66,9 +69,9 @@ export default function UserDashboard({ curp }: { curp: string }) {
   }, [curp]);
 
   useEffect(() => {
-    if (!user || !finishedBoxes) return;
+  if (!user || !finishedBoxes) return;
 
-    const fetchTransactions = async () => {
+  const fetchTransactions = async () => {
       try {
         const res = await fetch(`/api/transactions?curp=${user.curp}`);
         const data: Transaction[] = await res.json();

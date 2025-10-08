@@ -3,6 +3,9 @@ import { PrismaClient, Transaction } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// Tipo para la respuesta de transacciones sin exponer userId
+type TransactionResponse = Omit<Transaction, "userId">;
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
@@ -20,7 +23,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const transactions: Transaction[] = await prisma.transaction.findMany({
+    // Traemos transacciones del usuario
+    const transactions: TransactionResponse[] = await prisma.transaction.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       select: {
@@ -35,7 +39,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(transactions);
   } catch (error: unknown) {
-    console.error("Error fetching transactions:", error instanceof Error ? error.message : error);
+    console.error(
+      "Error fetching transactions:",
+      error instanceof Error ? error.message : error
+    );
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   } finally {
     await prisma.$disconnect();
@@ -49,7 +56,7 @@ export async function POST(req: NextRequest) {
       code?: string;
       amount?: number;
       legalized?: boolean;
-      userId?: string;
+      userId?: number;
     } = await req.json();
 
     if (!body.reference || !body.code || !body.amount || !body.userId) {
@@ -68,7 +75,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(tx);
   } catch (error: unknown) {
-    console.error("Error creating transaction:", error instanceof Error ? error.message : error);
+    console.error(
+      "Error creating transaction:",
+      error instanceof Error ? error.message : error
+    );
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   } finally {
     await prisma.$disconnect();
