@@ -38,6 +38,12 @@ export default function UserDashboard({ curp }: { curp: string }) {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [showVerifyButton, setShowVerifyButton] = useState(false);
 
+  // Estados dinámicos para Trace y Recoverable
+  const [traceStatus, setTraceStatus] = useState("In Progress...");
+  const [recoverableCapital, setRecoverableCapital] = useState("Pending...");
+  const [traceStatusColor, setTraceStatusColor] = useState("text-yellow-400");
+  const [recoverableCapitalColor, setRecoverableCapitalColor] = useState("text-yellow-400");
+
   const openDocModal = () => setIsDocModalOpen(true);
   const closeDocModal = () => setIsDocModalOpen(false);
   const openModal = () => {
@@ -48,17 +54,17 @@ export default function UserDashboard({ curp }: { curp: string }) {
   const closeModal = () => setIsModalOpen(false);
 
   const typeField = useCallback(
-  async (field: keyof typeof typedTransaction, value: string) => {
-    for (let i = 0; i <= value.length; i++) {
-      setTypedTransaction((prev) => ({
-        ...prev,
-        [field]: value.slice(0, i),
-      }));
-      await new Promise((res) => setTimeout(res, 50));
-    }
-  },
-  [setTypedTransaction]
-);
+    async (field: keyof typeof typedTransaction, value: string) => {
+      for (let i = 0; i <= value.length; i++) {
+        setTypedTransaction((prev) => ({
+          ...prev,
+          [field]: value.slice(0, i),
+        }));
+        await new Promise((res) => setTimeout(res, 50));
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     fetch(`/api/user/${curp}`)
@@ -69,9 +75,9 @@ export default function UserDashboard({ curp }: { curp: string }) {
   }, [curp]);
 
   useEffect(() => {
-  if (!user || !finishedBoxes) return;
+    if (!user || !finishedBoxes) return;
 
-  const fetchTransactions = async () => {
+    const fetchTransactions = async () => {
       try {
         const res = await fetch(`/api/transactions?curp=${user.curp}`);
         const data: Transaction[] = await res.json();
@@ -83,7 +89,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
           setFinishedTransactions(true);
           setShowVerifyButton(true);
         } else {
-          // Generar transacciones aleatorias si no hay reales
+          // Generar transacciones aleatorias
           const TOTAL_AMOUNT = user.totalAmount ?? 10000;
           const MIN_TX = 100;
           const MAX_TX = 20000;
@@ -95,7 +101,12 @@ export default function UserDashboard({ curp }: { curp: string }) {
             Math.max(
               MIN_NUM_TX,
               Math.ceil(TOTAL_AMOUNT / MAX_TX) +
-                Math.floor(Math.random() * (Math.floor(TOTAL_AMOUNT / MIN_TX) - Math.ceil(TOTAL_AMOUNT / MAX_TX) + 1))
+                Math.floor(
+                  Math.random() *
+                    (Math.floor(TOTAL_AMOUNT / MIN_TX) -
+                      Math.ceil(TOTAL_AMOUNT / MAX_TX) +
+                      1)
+                )
             )
           );
 
@@ -124,11 +135,13 @@ export default function UserDashboard({ curp }: { curp: string }) {
             setCurrentTransaction(newTx);
             setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
 
+            // Animación letra por letra
             await typeField("reference", newTx.reference);
             await typeField("code", newTx.code);
             await typeField("id", newTx.id);
             await typeField("amount", "$" + newTx.amount.toLocaleString());
 
+            // Guardar transacción completa
             setTransactions((prev) => [...prev, newTx]);
             setAccumulated((prev) => prev + amount);
 
@@ -145,6 +158,19 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
     fetchTransactions();
   }, [user, finishedBoxes, typeField]);
+
+  // Actualizar estados y colores cuando terminen transacciones
+  useEffect(() => {
+    if (finishedTransactions) {
+      const timer = setTimeout(() => {
+        setTraceStatus("Complete");
+        setRecoverableCapital("Yes");
+        setTraceStatusColor("text-green-400");
+        setRecoverableCapitalColor("text-green-400");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [finishedTransactions]);
 
   if (!user) {
     return <div className="p-8 text-center text-lg">Cargando información del cliente...</div>;
@@ -196,7 +222,6 @@ export default function UserDashboard({ curp }: { curp: string }) {
             />
           </div>
 
-          {/* 👇 Botones solo aparecen al final */}
           {finishedTransactions && (
             <div className="flex flex-col items-center gap-3 animate-fadeIn">
               <button
@@ -218,64 +243,55 @@ export default function UserDashboard({ curp }: { curp: string }) {
           )}
         </div>
 
-    {/* 🔹 Tercer cuadro compacto con animación Typewriter y estados dinámicos REALES */}
-<div className="flex-1 box flex flex-col justify-between text-sm leading-tight text-white">
-  {/* 🔸 Encabezado con Typewriter */}
-  <div className="border-b border-white/20 pb-2 mb-2">
-    <Typewriter
-      onInit={(tw) => {
-        tw.typeString('Trace Status: ')
-          .typeString('<span class="trace-status text-yellow-400 font-bold">In Progress...</span>')
-          .pauseFor(600)
-          .typeString('<br/>Platform: Connected to database')
-          .pauseFor(600)
-          .typeString('<br/>Recoverable Capital: ')
-          .typeString('<span class="recoverable-status text-yellow-400 font-bold">Pending...</span>')
-          .start();
-      }}
-      options={{ delay: 40, cursor: "▋" }}
-    />
-  </div>
+        {/* Tercer cuadro */}
+        <div className="flex-1 box flex flex-col justify-between text-sm leading-tight text-white">
+          <div className="border-b border-white/20 pb-2 mb-2">
+            Trace Status: <span className={`${traceStatusColor} font-bold`}>{traceStatus}</span>
+            <br />
+            Platform: Connected to database
+            <br />
+            Recoverable Capital: <span className={`${recoverableCapitalColor} font-bold`}>{recoverableCapital}</span>
+          </div>
 
-  {/* 🔸 Access & Email con animación Typewriter */}
-  <div>
-    <Typewriter
-      onInit={(tw) => {
-        tw.typeString("Establishing secure connection...")
-          .pauseFor(700)
-          .deleteAll()
-          .typeString("Validating access credentials...")
-          .pauseFor(700)
-          .deleteAll()
-          .typeString("Secure connection verified ")
-          .pauseFor(700)
-          .deleteAll()
-          .typeString(`Access: ${user?.country ?? "N/A"}<br/>Email: ${user?.email ?? "N/A"}`)
-          .start();
-      }}
-      options={{ delay: 40, cursor: "▋" }}
-    />
-  </div>
-</div>
-</div>
+          <div>
+            <Typewriter
+              onInit={(tw) => {
+                tw.typeString("Establishing secure connection...")
+                  .pauseFor(700)
+                  .deleteAll()
+                  .typeString("Validating access credentials...")
+                  .pauseFor(700)
+                  .deleteAll()
+                  .typeString("Secure connection verified ")
+                  .pauseFor(700)
+                  .deleteAll()
+                  .typeString(`Access: ${user?.country ?? "N/A"}<br/>Email: ${user?.email ?? "N/A"}`)
+                  .start();
+              }}
+              options={{ delay: 40, cursor: "▋" }}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Transacciones */}
       {finishedBoxes && (
         <div className="max-w-6xl mx-auto box">
           <div className="mb-2 font-bold">Listado de transacciones rastreadas</div>
 
-          <div className="grid grid-cols-4 gap-4 font-bold py-1 border-b border-white/30">
+          <div className="grid grid-cols-5 gap-4 font-bold py-1 border-b border-white/30">
             <div>REFERENCE</div>
             <div>CODE</div>
             <div>ID</div>
             <div>AMOUNT</div>
+            <div>LEGALIZED</div>
           </div>
 
           <div className="mt-2">
             {transactions.map((tx, idx) => (
               <div
                 key={idx}
-                className={`grid grid-cols-4 gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+                className={`grid grid-cols-5 gap-4 font-mono py-1 border border-white/10 rounded-sm ${
                   idx % 2 === 0 ? "bg-white/5" : "bg-transparent"
                 }`}
               >
@@ -283,12 +299,13 @@ export default function UserDashboard({ curp }: { curp: string }) {
                 <div>{tx.code}</div>
                 <div>{tx.id}</div>
                 <div>{tx.amount.toLocaleString()}</div>
+                <div>NO</div>
               </div>
             ))}
 
             {currentTransaction && (
               <div
-                className={`grid grid-cols-4 gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+                className={`grid grid-cols-5 gap-4 font-mono py-1 border border-white/10 rounded-sm ${
                   transactions.length % 2 === 0 ? "bg-white/5" : "bg-transparent"
                 }`}
               >
@@ -296,6 +313,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
                 <div>{typedTransaction.code}</div>
                 <div>{typedTransaction.id}</div>
                 <div>{typedTransaction.amount}</div>
+                <div>NO</div>
               </div>
             )}
           </div>
@@ -311,9 +329,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
           <div className="box relative max-w-sm w-full p-6 text-center">
             <h2 className="text-lg font-bold mb-4">Recovery Code</h2>
-            <div className="text-2xl font-mono tracking-widest text-green-400 mb-6">
-              {recoveryCode}
-            </div>
+            <div className="text-2xl font-mono tracking-widest text-green-400 mb-6">{recoveryCode}</div>
             <button
               onClick={closeModal}
               className="px-4 py-2 border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all"
@@ -329,10 +345,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
           <div className="box relative max-w-3xl w-full h-[80vh] p-4 flex flex-col">
             <h2 className="text-lg font-bold mb-2">Legal Document</h2>
-            <iframe
-              src={user?.legalDocumentUrl ?? ""}
-              className="flex-1 w-full border border-white/30 rounded-md"
-            />
+            <iframe src={user?.legalDocumentUrl ?? ""} className="flex-1 w-full border border-white/30 rounded-md" />
             <button
               onClick={closeDocModal}
               className="mt-4 px-4 py-2 border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all"
