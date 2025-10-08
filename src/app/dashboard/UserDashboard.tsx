@@ -38,7 +38,6 @@ export default function UserDashboard({ curp }: { curp: string }) {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [showVerifyButton, setShowVerifyButton] = useState(false);
 
-  // Estados dinámicos para Trace y Recoverable
   const [traceStatus, setTraceStatus] = useState("In Progress...");
   const [recoverableCapital, setRecoverableCapital] = useState("Pending...");
   const [traceStatusColor, setTraceStatusColor] = useState("text-yellow-400");
@@ -66,14 +65,16 @@ export default function UserDashboard({ curp }: { curp: string }) {
     []
   );
 
+  // Cargar usuario
   useEffect(() => {
-    fetch(`/api/user/${curp}`)
+    fetch(`/api/user?curp=${curp}`)
       .then((res) => res.json())
       .then((data) => {
         if (!data.error) setUser(data);
       });
   }, [curp]);
 
+  // Animar transacciones
   useEffect(() => {
     if (!user || !finishedBoxes) return;
 
@@ -82,14 +83,12 @@ export default function UserDashboard({ curp }: { curp: string }) {
         const res = await fetch(`/api/transactions?curp=${user.curp}`);
         const data: Transaction[] = await res.json();
 
+        let txs: Transaction[] = [];
+
         if (data.length > 0) {
-          setTransactions(data);
-          const total = data.reduce((sum, tx) => sum + tx.amount, 0);
-          setAccumulated(total);
-          setFinishedTransactions(true);
-          setShowVerifyButton(true);
+          txs = data;
         } else {
-          // Generar transacciones aleatorias
+          // Generar aleatorias
           const TOTAL_AMOUNT = user.totalAmount ?? 10000;
           const MIN_TX = 100;
           const MAX_TX = 20000;
@@ -103,9 +102,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
               Math.ceil(TOTAL_AMOUNT / MAX_TX) +
                 Math.floor(
                   Math.random() *
-                    (Math.floor(TOTAL_AMOUNT / MIN_TX) -
-                      Math.ceil(TOTAL_AMOUNT / MAX_TX) +
-                      1)
+                    (Math.floor(TOTAL_AMOUNT / MIN_TX) - Math.ceil(TOTAL_AMOUNT / MAX_TX) + 1)
                 )
             )
           );
@@ -116,41 +113,40 @@ export default function UserDashboard({ curp }: { curp: string }) {
           const diff = TOTAL_AMOUNT - amounts.reduce((a, b) => a + b, 0);
           amounts[amounts.length - 1] += diff;
 
-          let i = 0;
-          const generateNext = async () => {
-            if (i >= amounts.length) {
-              setFinishedTransactions(true);
-              setTimeout(() => setShowVerifyButton(true), 1000);
-              return;
-            }
-
-            const amount = amounts[i];
-            const newTx: Transaction = {
-              reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
-              code: Math.random().toString(36).substring(2, 6).toUpperCase(),
-              id: Math.random().toString(36).substring(2, 10),
-              amount,
-            };
-
-            setCurrentTransaction(newTx);
-            setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
-
-            // Animación letra por letra
-            await typeField("reference", newTx.reference);
-            await typeField("code", newTx.code);
-            await typeField("id", newTx.id);
-            await typeField("amount", "$" + newTx.amount.toLocaleString());
-
-            // Guardar transacción completa
-            setTransactions((prev) => [...prev, newTx]);
-            setAccumulated((prev) => prev + amount);
-
-            i++;
-            generateNext();
-          };
-
-          generateNext();
+          txs = amounts.map((amount) => ({
+            reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
+            code: Math.random().toString(36).substring(2, 6).toUpperCase(),
+            id: Math.random().toString(36).substring(2, 10),
+            amount,
+          }));
         }
+
+        // Animar transacciones letra por letra
+        let i = 0;
+        const typeNext = async () => {
+          if (i >= txs.length) {
+            setFinishedTransactions(true);
+            setShowVerifyButton(true);
+            return;
+          }
+
+          const tx = txs[i];
+          setCurrentTransaction(tx);
+          setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
+
+          await typeField("reference", tx.reference);
+          await typeField("code", tx.code);
+          await typeField("id", tx.id);
+          await typeField("amount", "$" + tx.amount.toLocaleString());
+
+          setTransactions((prev) => [...prev, tx]);
+          setAccumulated((prev) => prev + tx.amount);
+
+          i++;
+          typeNext();
+        };
+
+        typeNext();
       } catch (error) {
         console.error("Error fetching transactions:", error);
       }
@@ -159,7 +155,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
     fetchTransactions();
   }, [user, finishedBoxes, typeField]);
 
-  // Actualizar estados y colores cuando terminen transacciones
+  // Cambiar estados al terminar
   useEffect(() => {
     if (finishedTransactions) {
       const timer = setTimeout(() => {
@@ -172,9 +168,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
     }
   }, [finishedTransactions]);
 
-  if (!user) {
-    return <div className="p-8 text-center text-lg">Cargando información del cliente...</div>;
-  }
+  if (!user) return <div className="p-8 text-center text-lg">Cargando información del cliente...</div>;
 
   return (
     <div className="min-h-screen p-8">
@@ -216,10 +210,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
         {/* Segundo cuadro */}
         <div className="flex-1 box flex flex-col justify-between">
           <div className="border-b border-white/20 pb-2 mb-2">
-            <Typewriter
-              onInit={(tw) => tw.typeString("Start Capital Recovery Process").start()}
-              options={{ delay: 50, cursor: "▋" }}
-            />
+            <Typewriter onInit={(tw) => tw.typeString("Start Capital Recovery Process").start()} options={{ delay: 50, cursor: "▋" }} />
           </div>
 
           {finishedTransactions && (
@@ -345,10 +336,14 @@ export default function UserDashboard({ curp }: { curp: string }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
           <div className="box relative max-w-3xl w-full h-[80vh] p-4 flex flex-col">
             <h2 className="text-lg font-bold mb-2">Legal Document</h2>
-            <iframe
-  src={user?.curp ? `/api/user?curp=${user.curp}` : ""}
-  className="flex-1 w-full border border-white/30 rounded-md"
-/>
+            {user?.legalDocumentUrl ? (
+              <iframe
+                src={`/api/user?file=${user.legalDocumentUrl}`}
+                className="flex-1 w-full border border-white/30 rounded-md"
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-white/70">No document uploaded</div>
+            )}
             <button
               onClick={closeDocModal}
               className="mt-4 px-4 py-2 border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all"
