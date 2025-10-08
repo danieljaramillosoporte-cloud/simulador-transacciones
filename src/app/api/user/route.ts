@@ -1,49 +1,75 @@
+// src/app/api/user/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir, readFile } from "fs/promises";
 import path from "path";
 
 const prisma = new PrismaClient();
+const UPLOADS_DIR = "/mnt/disks/data/uploads";
 
-export async function POST(req: Request) {
+// ==========================================
+// GET: Listar usuarios o servir PDF por query
+// ==========================================
+export async function GET(req: Request) {
   try {
-    const formData = await req.formData();
+    const url = new URL(req.url);
+    const fileName = url.searchParams.get("file");
 
-    const name = formData.get("name") as string;
-    const curp = formData.get("curp") as string;
-    const email = formData.get("email") as string | null;
-    const country = formData.get("country") as string | null;
-    const totalAmount = Number(formData.get("totalAmount") || 10000);
-
-    const file = formData.get("legalDocument") as File | null;
-
-    let legalDocumentUrl: string | null = null;
-
-    if (file) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      const fileName = `${curp}-${Date.now()}.pdf`;
-      const filePath = path.join(process.cwd(), "public", "uploads", fileName);
-
-      await writeFile(filePath, buffer);
-      legalDocumentUrl = `/uploads/${fileName}`;
+    if (fileName) {
+      // Servir PDF desde Persistent Disk
+      const filePath = path.join(UPLOADS_DIR, fileName);
+      try {
+        const file = await readFile(filePath);
+        return new NextResponse(file, { headers: { "Content-Type": "application/pdf" } });
+      } catch {
+        return NextResponse.json({ error: "Archivo no encontrado" }, { status: 404 });
+      }
     }
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        curp,
-        email,
-        country,
-        totalAmount,
-        legalDocumentUrl,
-      },
+    // Listar todos los usuarios
+    const users = await prisma.user.findMany({
+      select: { id: true, name: true, curp: true, email: true, country: true, legalDocumentUrl: true },
+    });
+    return NextResponse.json(users);
+  } catch (error) {
+    console.error("❌ Error en GET /api/user:", error);
+    return NextResponse.json({ error: "Error cargando usuarios" }, { status: 500 });
+  }
+}
+
+// ==========================================
+// PUT: Subir PDF y actualizar usuario
+// ==========================================
+export async function PUT(req: Request) {
+  try {
+    const formData = await req.formData();
+    const curp = formData.get("curp") as string;
+    const file = formData.get("legalDocument");
+
+    if (!curp) return NextResponse.json({ error: "CURP requerida" }, { status: 400 });
+    if (!file || !(file instanceof File)) return NextResponse.json({ error: "Archivo inválido" }, { status: 400 });
+
+    // Buscar usuario
+    const user = await prisma.user.findUnique({ where: { curp } });
+    if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+
+    // Guardar PDF en Persistent Disk
+    await mkdir(UPLOADS_DIR, { recursive: true });
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `${curp}-${Date.now()}.pdf`;
+    const filePath = path.join(UPLOADS_DIR, fileName);
+    await writeFile(filePath, buffer);
+
+    // Guardar solo el nombre del archivo en la DB
+    const updatedUser = await prisma.user.update({
+      where: { curp },
+      data: { legalDocumentUrl: fileName },
     });
 
-    return NextResponse.json(user);
+    return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error("❌ Error creando usuario:", error);
-    return NextResponse.json({ error: "Error creando usuario" }, { status: 500 });
+    console.error("❌ Error subiendo documento:", error);
+    return NextResponse.json({ error: "Error subiendo documento" }, { status: 500 });
   }
 }

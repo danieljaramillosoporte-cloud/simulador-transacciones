@@ -345,7 +345,10 @@ export default function UserDashboard({ curp }: { curp: string }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
           <div className="box relative max-w-3xl w-full h-[80vh] p-4 flex flex-col">
             <h2 className="text-lg font-bold mb-2">Legal Document</h2>
-            <iframe src={user?.legalDocumentUrl ?? ""} className="flex-1 w-full border border-white/30 rounded-md" />
+            <iframe
+  src={user?.curp ? `/api/user?curp=${user.curp}` : ""}
+  className="flex-1 w-full border border-white/30 rounded-md"
+/>
             <button
               onClick={closeDocModal}
               className="mt-4 px-4 py-2 border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all"
