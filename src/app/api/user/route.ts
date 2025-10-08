@@ -7,26 +7,22 @@ import path from "path";
 const prisma = new PrismaClient();
 const UPLOADS_DIR = "/mnt/disks/data/uploads";
 
-// ==========================================
-// GET: Listar usuarios o servir PDF por query
-// ==========================================
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const fileName = url.searchParams.get("file");
 
     if (fileName) {
-      // Servir PDF desde Persistent Disk
       const filePath = path.join(UPLOADS_DIR, fileName);
       try {
         const file = await readFile(filePath);
-        return new NextResponse(file, { headers: { "Content-Type": "application/pdf" } });
+        const uint8Array = new Uint8Array(file);
+        return new NextResponse(uint8Array, { headers: { "Content-Type": "application/pdf" } });
       } catch {
         return NextResponse.json({ error: "Archivo no encontrado" }, { status: 404 });
       }
     }
 
-    // Listar todos los usuarios
     const users = await prisma.user.findMany({
       select: { id: true, name: true, curp: true, email: true, country: true, legalDocumentUrl: true },
     });
@@ -37,9 +33,6 @@ export async function GET(req: Request) {
   }
 }
 
-// ==========================================
-// PUT: Subir PDF y actualizar usuario
-// ==========================================
 export async function PUT(req: Request) {
   try {
     const formData = await req.formData();
@@ -49,11 +42,9 @@ export async function PUT(req: Request) {
     if (!curp) return NextResponse.json({ error: "CURP requerida" }, { status: 400 });
     if (!file || !(file instanceof File)) return NextResponse.json({ error: "Archivo inválido" }, { status: 400 });
 
-    // Buscar usuario
     const user = await prisma.user.findUnique({ where: { curp } });
     if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
 
-    // Guardar PDF en Persistent Disk
     await mkdir(UPLOADS_DIR, { recursive: true });
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -61,7 +52,6 @@ export async function PUT(req: Request) {
     const filePath = path.join(UPLOADS_DIR, fileName);
     await writeFile(filePath, buffer);
 
-    // Guardar solo el nombre del archivo en la DB
     const updatedUser = await prisma.user.update({
       where: { curp },
       data: { legalDocumentUrl: fileName },
