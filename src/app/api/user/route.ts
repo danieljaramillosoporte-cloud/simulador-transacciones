@@ -91,10 +91,15 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newUser, { status: 201 });
-  } catch (error: any) {
-    console.error("❌ Error creando usuario:", error.message, error.stack);
+    } catch (error) {
+    if (error instanceof Error) {
+      console.error("❌ Error creando usuario:", error.message, error.stack);
+    } else {
+      console.error("❌ Error desconocido creando usuario:", error);
+    }
     return NextResponse.json({ error: "Error creando usuario" }, { status: 500 });
   }
+
 }
 
 // ✅ PUT → subir o reemplazar PDF de un usuario existente
