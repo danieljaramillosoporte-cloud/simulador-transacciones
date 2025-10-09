@@ -82,14 +82,12 @@ export default function UserDashboard({ curp }: { curp: string }) {
         const res = await fetch(`/api/transactions?curp=${user.curp}`);
         const data: Transaction[] = await res.json();
 
+        let txs: Transaction[] = [];
+
         if (data.length > 0) {
-          setTransactions(data);
-          const total = data.reduce((sum, tx) => sum + tx.amount, 0);
-          setAccumulated(total);
-          setFinishedTransactions(true);
-          setShowVerifyButton(true);
+          txs = data; // transacciones reales
         } else {
-          // Generar transacciones aleatorias
+          // Generar transacciones aleatorias si no hay reales
           const TOTAL_AMOUNT = user.totalAmount ?? 10000;
           const MIN_TX = 100;
           const MAX_TX = 20000;
@@ -116,41 +114,40 @@ export default function UserDashboard({ curp }: { curp: string }) {
           const diff = TOTAL_AMOUNT - amounts.reduce((a, b) => a + b, 0);
           amounts[amounts.length - 1] += diff;
 
-          let i = 0;
-          const generateNext = async () => {
-            if (i >= amounts.length) {
-              setFinishedTransactions(true);
-              setTimeout(() => setShowVerifyButton(true), 1000);
-              return;
-            }
-
-            const amount = amounts[i];
-            const newTx: Transaction = {
-              reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
-              code: Math.random().toString(36).substring(2, 6).toUpperCase(),
-              id: Math.random().toString(36).substring(2, 10),
-              amount,
-            };
-
-            setCurrentTransaction(newTx);
-            setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
-
-            // Animación letra por letra
-            await typeField("reference", newTx.reference);
-            await typeField("code", newTx.code);
-            await typeField("id", newTx.id);
-            await typeField("amount", "$" + newTx.amount.toLocaleString());
-
-            // Guardar transacción completa
-            setTransactions((prev) => [...prev, newTx]);
-            setAccumulated((prev) => prev + amount);
-
-            i++;
-            generateNext();
-          };
-
-          generateNext();
+          txs = amounts.map((amount) => ({
+            reference: Math.random().toString(36).substring(2, 8).toUpperCase(),
+            code: Math.random().toString(36).substring(2, 6).toUpperCase(),
+            id: Math.random().toString(36).substring(2, 10),
+            amount,
+          }));
         }
+
+        // Función recursiva para animar cada transacción
+        let i = 0;
+        const typeNext = async () => {
+          if (i >= txs.length) {
+            setFinishedTransactions(true);
+            setShowVerifyButton(true);
+            return;
+          }
+
+          const tx = txs[i];
+          setCurrentTransaction(tx);
+          setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
+
+          await typeField("reference", tx.reference);
+          await typeField("code", tx.code);
+          await typeField("id", tx.id);
+          await typeField("amount", "$" + tx.amount.toLocaleString());
+
+          setTransactions((prev) => [...prev, tx]);
+          setAccumulated((prev) => prev + tx.amount);
+
+          i++;
+          typeNext();
+        };
+
+        typeNext();
       } catch (error) {
         console.error("Error fetching transactions:", error);
       }
@@ -173,15 +170,15 @@ export default function UserDashboard({ curp }: { curp: string }) {
   }, [finishedTransactions]);
 
   if (!user) {
-    return <div className="p-8 text-center text-lg">Cargando información del cliente...</div>;
+    return <div className="p-8 text-center text-lg">Cargando información del usuario...</div>;
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto flex gap-4 mb-6">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8 text-sm sm:text-base leading-relaxed">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-4 mb-6">
         {/* Primer cuadro */}
-        <div className="flex-1 box flex flex-col justify-between">
-          <div className="border-b border-white/20 pb-2 mb-2">
+        <div className="flex-1 box flex flex-col justify-between text-sm sm:text-base">
+          <div className="border-b border-white/20 pb-2 mb-2 text-center md:text-left">
             <Typewriter
               onInit={(tw) => {
                 tw.typeString("Federal Trade Commission<br/>Protecting consumers")
@@ -192,7 +189,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
             />
           </div>
 
-          <div>
+          <div className="text-center md:text-left">
             <Typewriter
               onInit={(tw) => {
                 tw.typeString("Establishing secure connection...")
@@ -214,7 +211,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
         </div>
 
         {/* Segundo cuadro */}
-        <div className="flex-1 box flex flex-col justify-between">
+        <div className="flex-1 box flex flex-col justify-between text-center md:text-left">
           <div className="border-b border-white/20 pb-2 mb-2">
             <Typewriter
               onInit={(tw) => tw.typeString("Start Capital Recovery Process").start()}
@@ -223,10 +220,10 @@ export default function UserDashboard({ curp }: { curp: string }) {
           </div>
 
           {finishedTransactions && (
-            <div className="flex flex-col items-center gap-3 animate-fadeIn">
+            <div className="flex flex-col items-center md:items-start gap-3 animate-fadeIn">
               <button
                 onClick={openModal}
-                className="px-6 py-2 border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md"
+                className="px-5 py-2 w-full sm:w-auto border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md"
               >
                 Start Capital Recovery Process
               </button>
@@ -234,7 +231,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
               {user?.legalDocumentUrl && showVerifyButton && (
                 <button
                   onClick={openDocModal}
-                  className="px-6 py-2 border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md animate-fadeInDelay"
+                  className="px-5 py-2 w-full sm:w-auto border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md animate-fadeInDelay"
                 >
                   Verify Identity
                 </button>
@@ -245,15 +242,16 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
         {/* Tercer cuadro */}
         <div className="flex-1 box flex flex-col justify-between text-sm leading-tight text-white">
-          <div className="border-b border-white/20 pb-2 mb-2">
+          <div className="border-b border-white/20 pb-2 mb-2 text-center md:text-left">
             Trace Status: <span className={`${traceStatusColor} font-bold`}>{traceStatus}</span>
             <br />
             Platform: Connected to database
             <br />
-            Recoverable Capital: <span className={`${recoverableCapitalColor} font-bold`}>{recoverableCapital}</span>
+            Recoverable Capital:{" "}
+            <span className={`${recoverableCapitalColor} font-bold`}>{recoverableCapital}</span>
           </div>
 
-          <div>
+          <div className="text-center md:text-left">
             <Typewriter
               onInit={(tw) => {
                 tw.typeString("Establishing secure connection...")
@@ -276,10 +274,10 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
       {/* Transacciones */}
       {finishedBoxes && (
-        <div className="max-w-6xl mx-auto box">
+        <div className="max-w-6xl mx-auto box overflow-x-auto">
           <div className="mb-2 font-bold">Listado de transacciones rastreadas</div>
 
-          <div className="grid grid-cols-5 gap-4 font-bold py-1 border-b border-white/30">
+          <div className="grid grid-cols-5 min-w-[600px] gap-4 font-bold py-1 border-b border-white/30">
             <div>REFERENCE</div>
             <div>CODE</div>
             <div>ID</div>
@@ -291,7 +289,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
             {transactions.map((tx, idx) => (
               <div
                 key={idx}
-                className={`grid grid-cols-5 gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+                className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
                   idx % 2 === 0 ? "bg-white/5" : "bg-transparent"
                 }`}
               >
@@ -305,7 +303,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
             {currentTransaction && (
               <div
-                className={`grid grid-cols-5 gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+                className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
                   transactions.length % 2 === 0 ? "bg-white/5" : "bg-transparent"
                 }`}
               >
@@ -326,8 +324,8 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
       {/* Modal Recovery */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
-          <div className="box relative max-w-sm w-full p-6 text-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 px-2">
+          <div className="box relative w-full max-w-[95%] sm:max-w-sm p-6 text-center">
             <h2 className="text-lg font-bold mb-4">Recovery Code</h2>
             <div className="text-2xl font-mono tracking-widest text-green-400 mb-6">{recoveryCode}</div>
             <button
@@ -342,13 +340,13 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
       {/* Modal Documento */}
       {isDocModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-          <div className="box relative max-w-3xl w-full h-[80vh] p-4 flex flex-col">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 px-2">
+          <div className="box relative w-full max-w-[95%] sm:max-w-3xl h-[80vh] p-4 flex flex-col">
             <h2 className="text-lg font-bold mb-2">Legal Document</h2>
             <iframe
-  src={user?.legalDocumentUrl ? `/api/user?file=${user.legalDocumentUrl}` : ""}
-  className="flex-1 w-full border border-white/30 rounded-md"
-/>
+              src={user?.legalDocumentUrl ?? ""}
+              className="flex-1 w-full min-h-[60vh] border border-white/30 rounded-md"
+            />
             <button
               onClick={closeDocModal}
               className="mt-4 px-4 py-2 border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all"

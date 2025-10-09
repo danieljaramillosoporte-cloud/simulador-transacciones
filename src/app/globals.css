@@ -149,3 +149,27 @@ html, body {
 .glow-pulse {
   animation: pulseGlow 2.5s infinite ease-in-out;
 }
+
+/* 🔹 Scroll discreto y moderno */
+* {
+  scrollbar-width: thin;           /* Firefox */
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
