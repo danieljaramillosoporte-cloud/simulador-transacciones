@@ -25,15 +25,17 @@ export default function Login() {
   };
 
 const handleLogin = async () => {
-  if (!userId.trim()) return alert("Ingresa tu CURP");
+  const curp = userId.trim().toUpperCase(); // <-- convertir a mayúsculas
+  if (!curp) return alert("Ingresa tu CURP");
+
   setOutput("");
   setLoading(true);
 
-  await typeWriter(`Buscando usuario con CURP: ${userId}`);
+  await typeWriter(`Buscando usuario con CURP: ${curp}`);
   await animatedDots();
 
   try {
-    const res = await fetch(`/api/user/${userId}`);
+    const res = await fetch(`/api/user/${curp}`);
     const user = await res.json();
 
     if (user.error) {
@@ -46,13 +48,13 @@ const handleLogin = async () => {
     await typeWriter("Generando información");
     await animatedDots(5, 150);
 
-    // ✅ redirige con curp en vez de id
     router.replace(`/dashboard?curp=${user.curp}`);
   } catch (err) {
     await typeWriter("⚠️ Error de conexión con el servidor");
     setLoading(false);
   }
 };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent">
