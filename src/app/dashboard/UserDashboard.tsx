@@ -211,34 +211,40 @@ export default function UserDashboard({ curp }: { curp: string }) {
         </div>
 
         {/* Segundo cuadro */}
-        <div className="flex-1 box flex flex-col justify-between text-center md:text-left">
-          <div className="border-b border-white/20 pb-2 mb-2">
-            <Typewriter
-              onInit={(tw) => tw.typeString("Start Capital Recovery Process").start()}
-              options={{ delay: 50, cursor: "▋" }}
-            />
-          </div>
+<div className="flex-1 box flex flex-col justify-between text-center md:text-left">
+  <div className="border-b border-white/20 pb-2 mb-2">
+    <Typewriter
+      onInit={(tw) => tw.typeString("Start Capital Recovery Process").start()}
+      options={{ delay: 50, cursor: "▋" }}
+    />
+  </div>
 
-          {finishedTransactions && (
-            <div className="flex flex-col items-center md:items-start gap-3 animate-fadeIn">
-              <button
-                onClick={openModal}
-                className="px-5 py-2 w-full sm:w-auto border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md"
-              >
-                Start Capital Recovery Process
-              </button>
+  {finishedTransactions && (
+    <div className="flex flex-col items-center md:items-start gap-3 animate-fadeIn">
+      <button
+        onClick={openModal}
+        className="px-5 py-2 w-full sm:w-auto border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md"
+      >
+        Start Capital Recovery Process
+      </button>
 
-              {user?.legalDocumentUrl && showVerifyButton && (
-                <button
-                  onClick={openDocModal}
-                  className="px-5 py-2 w-full sm:w-auto border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md animate-fadeInDelay"
-                >
-                  Verify Identity
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+      {user?.legalDocumentUrl && showVerifyButton && (
+        <button
+          onClick={openDocModal}
+          className="px-5 py-2 w-full sm:w-auto border border-white rounded-md bg-white/10 hover:bg-white/20 transition-all shadow-md animate-fadeInDelay"
+        >
+          Verify Identity
+        </button>
+      )}
+
+      {/* 🔽 Texto agregado debajo de los botones 🔽 */}
+      <div className="mt-4 text-sm text-gray-300 text-center md:text-left leading-tight">
+        <p className="font-semibold">Delegado Fiduciario Cayetano Flores Flores</p>
+        <p>Número de CLABE: 012180015536344366</p>
+      </div>
+    </div>
+  )}
+</div>
 
         {/* Tercer cuadro */}
         <div className="flex-1 box flex flex-col justify-between text-sm leading-tight text-white">
