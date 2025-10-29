@@ -138,7 +138,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
           await typeField("reference", tx.reference);
           await typeField("code", tx.code);
-          await typeField("id", tx.id);
+          await typeField("date", formatDate(tx.date));
           await typeField("amount", "$" + tx.amount.toLocaleString());
 
           setTransactions((prev) => [...prev, tx]);
