@@ -28,7 +28,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
   const [typedTransaction, setTypedTransaction] = useState({
     reference: "",
     code: "",
-    id: "",
+    date: "",
     amount: "",
   });
   const [accumulated, setAccumulated] = useState(0);
@@ -134,7 +134,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
 
           const tx = txs[i];
           setCurrentTransaction(tx);
-          setTypedTransaction({ reference: "", code: "", id: "", amount: "" });
+          setTypedTransaction({ reference: "", code: "", date: "", amount: "" });
 
           await typeField("reference", tx.reference);
           await typeField("code", tx.code);
