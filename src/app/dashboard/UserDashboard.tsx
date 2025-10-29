@@ -6,8 +6,9 @@ import Typewriter from "typewriter-effect";
 interface Transaction {
   reference: string;
   code: string;
-  id: string;
   amount: number;
+  legalized?: boolean;
+  date?: string | null; 
 }
 
 interface User {
@@ -156,6 +157,17 @@ export default function UserDashboard({ curp }: { curp: string }) {
     fetchTransactions();
   }, [user, finishedBoxes, typeField]);
 
+  const formatDate = (dateString?: string | null) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+
   // Actualizar estados y colores cuando terminen transacciones
   useEffect(() => {
     if (finishedTransactions) {
@@ -237,7 +249,6 @@ export default function UserDashboard({ curp }: { curp: string }) {
         </button>
       )}
 
-      {/* 🔽 Texto agregado debajo de los botones 🔽 */}
       <div className="mt-4 text-sm text-gray-300 text-center md:text-left leading-tight">
         <p className="font-semibold">Delegado Fiduciario Cayetano Flores Flores</p>
         <p>Número de CLABE: 012180015536344366</p>
@@ -284,42 +295,43 @@ export default function UserDashboard({ curp }: { curp: string }) {
           <div className="mb-2 font-bold">Listado de transacciones rastreadas</div>
 
           <div className="grid grid-cols-5 min-w-[600px] gap-4 font-bold py-1 border-b border-white/30">
-            <div>REFERENCE</div>
-            <div>CODE</div>
-            <div>ID</div>
-            <div>AMOUNT</div>
-            <div>LEGALIZED</div>
-          </div>
+  <div>REFERENCE</div>
+  <div>CODE</div>
+  <div>AMOUNT</div>
+  <div>DATE</div>
+  <div>LEGALIZED</div>
+</div>
 
           <div className="mt-2">
             {transactions.map((tx, idx) => (
-              <div
-                key={idx}
-                className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
-                  idx % 2 === 0 ? "bg-white/5" : "bg-transparent"
-                }`}
-              >
-                <div>{tx.reference}</div>
-                <div>{tx.code}</div>
-                <div>{tx.id}</div>
-                <div>{tx.amount.toLocaleString()}</div>
-                <div>NO</div>
-              </div>
-            ))}
+  <div
+    key={idx}
+    className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+      idx % 2 === 0 ? "bg-white/5" : "bg-transparent"
+    }`}
+  >
+    <div>{tx.reference}</div>
+    <div>{tx.code}</div>
+    <div>{tx.amount.toLocaleString()}</div>
+    <div>{formatDate(tx.date)}</div>
+    <div>{tx.legalized ? "YES" : "NO"}</div>
+  </div>
+))}
 
             {currentTransaction && (
-              <div
-                className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
-                  transactions.length % 2 === 0 ? "bg-white/5" : "bg-transparent"
-                }`}
-              >
-                <div>{typedTransaction.reference}</div>
-                <div>{typedTransaction.code}</div>
-                <div>{typedTransaction.id}</div>
-                <div>{typedTransaction.amount}</div>
-                <div>NO</div>
-              </div>
-            )}
+  <div
+    className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+      transactions.length % 2 === 0 ? "bg-white/5" : "bg-transparent"
+    }`}
+  >
+    <div>{typedTransaction.reference}</div>
+    <div>{typedTransaction.code}</div>
+    <div>{typedTransaction.amount}</div>
+    <div>—</div>
+    <div>NO</div>
+  </div>
+)}
+
           </div>
 
           <div className="mt-4 font-bold text-right text-lg">

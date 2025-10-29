@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         amount: true,
         legalized: true,
         createdAt: true,
+        date: true, // 👈 agregamos el campo date
       },
     });
 
@@ -57,12 +58,14 @@ export async function POST(req: NextRequest) {
       amount?: number;
       legalized?: boolean;
       userId?: number;
+      date?: string; // 👈 agregamos date al body
     } = await req.json();
 
     if (!body.reference || !body.code || !body.amount || !body.userId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // ✅ Crear la transacción con date manual si existe
     const tx: Transaction = await prisma.transaction.create({
       data: {
         reference: body.reference,
@@ -70,6 +73,7 @@ export async function POST(req: NextRequest) {
         amount: body.amount,
         legalized: body.legalized ?? false,
         userId: body.userId,
+        date: body.date ? new Date(body.date) : null, // 👈 guardamos la fecha manual si se envía
       },
     });
 

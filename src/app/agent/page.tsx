@@ -11,17 +11,17 @@ interface User {
 
 export default function AgentDashboard() {
   const [form, setForm] = useState({
-    name: "",
-    curp: "",
-    email: "",
-    country: "",
-    reference: "",
-    code: "",
-    amount: 0,
-    totalAmount: 10000,
-    legalDocumentFile: null as File | null,
-  });
-
+  name: "",
+  curp: "",
+  email: "",
+  country: "",
+  reference: "",
+  code: "",
+  amount: 0,
+  totalAmount: 10000,
+  date: "", // 👈 nuevo campo manual
+  legalDocumentFile: null as File | null,
+});
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -69,15 +69,16 @@ export default function AgentDashboard() {
     if (user.error) return alert("Usuario no encontrado");
 
     const resTx = await fetch("/api/transactions", {
-      method: "POST",
-      body: JSON.stringify({
-        reference: form.reference,
-        code: form.code,
-        amount: form.amount,
-        userId: user.id,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+  method: "POST",
+  body: JSON.stringify({
+    reference: form.reference,
+    code: form.code,
+    amount: form.amount,
+    userId: user.id,
+    date: form.date ? new Date(form.date).toISOString() : null, // 👈 convertir al formato ISO
+  }),
+  headers: { "Content-Type": "application/json" },
+});
 
     const txData = await resTx.json();
     if (resTx.ok) alert("Transacción agregada ✅");
@@ -126,6 +127,12 @@ export default function AgentDashboard() {
       <input className="input mb-2" placeholder="CURP del usuario" value={form.curp} onChange={(e) => setForm({ ...form, curp: e.target.value })} />
       <input className="input mb-2" placeholder="Reference" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
       <input className="input mb-2" placeholder="Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+      <input
+  className="input mb-2"
+  type="datetime-local"
+  value={form.date}
+  onChange={(e) => setForm({ ...form, date: e.target.value })}
+/>
       <input className="input mb-2" type="number" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} />
       <button onClick={createTransaction} className="button mt-2">Agregar Transacción</button>
 

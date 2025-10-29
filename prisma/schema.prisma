@@ -30,6 +30,8 @@ model Transaction {
   amount    Float
   legalized Boolean  @default(false)
   createdAt DateTime @default(now())
+  date      DateTime?             // 👈 Campo manual opcional
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
 }
+
