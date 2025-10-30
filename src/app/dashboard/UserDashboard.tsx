@@ -250,8 +250,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
       )}
 
       <div className="mt-4 text-sm text-gray-300 text-center md:text-left leading-tight">
-        <p className="font-semibold">Delegado Fiduciario Cayetano Flores Flores</p>
-        <p>Número de CLABE: 012180015536344366</p>
+        <p className="font-semibold">Delegado Fiduciario</p>
       </div>
     </div>
   )}

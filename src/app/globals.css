@@ -173,3 +173,8 @@ html, body {
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
+select, select option {
+  background-color: #2f3e4a; 
+  color: #ffffff;           
+}

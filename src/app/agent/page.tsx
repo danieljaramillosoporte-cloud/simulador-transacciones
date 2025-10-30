@@ -138,13 +138,21 @@ export default function AgentDashboard() {
 
       {/* Subir Documento Legal */}
       <h2 className="font-bold mt-6">Agregar Documento Legal</h2>
-      <select className="input mb-2" value={selectedUser?.id ?? ""} onChange={(e) => {
-        const user = users.find(u => u.id === Number(e.target.value));
-        setSelectedUser(user ?? null);
-      }}>
-        <option value="">-- Selecciona un usuario --</option>
-        {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.curp})</option>)}
-      </select>
+      <select
+  className="input mb-2"
+  value={selectedUser?.id ?? ""}
+  onChange={(e) => {
+    const user = users.find(u => u.id === Number(e.target.value));
+    setSelectedUser(user ?? null);
+  }}
+>
+  <option value="">-- Selecciona un usuario --</option>
+  {users.map(u => (
+    <option key={u.id} value={u.id}>
+      {u.name} ({u.curp})
+    </option>
+  ))}
+</select>
       <input type="file" accept="application/pdf" className="input mb-2" onChange={(e) => { const file = e.target.files?.[0]; if (file) setForm({ ...form, legalDocumentFile: file }); }} />
       <button onClick={uploadLegalDocument} className="button mt-2">Subir Documento</button>
     </div>
