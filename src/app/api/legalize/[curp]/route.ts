@@ -17,8 +17,9 @@ export async function POST(req: Request, { params }: { params: { curp: string } 
       success: true,
       message: `Usuario ${user.name} legalizado ✅`,
     });
-  } catch (err: any) {
+    } catch (err) {
     console.error(err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Error desconocido";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
