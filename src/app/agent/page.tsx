@@ -11,25 +11,26 @@ interface User {
 
 export default function AgentDashboard() {
   const [form, setForm] = useState({
-  name: "",
-  curp: "",
-  email: "",
-  country: "",
-  reference: "",
-  code: "",
-  amount: 0,
-  totalAmount: 10000,
-  date: "", // 👈 nuevo campo manual
-  legalDocumentFile: null as File | null,
-});
+    name: "",
+    curp: "",
+    email: "",
+    country: "",
+    reference: "",
+    code: "",
+    amount: 0,
+    totalAmount: 10000,
+    date: "",
+    legalDocumentFile: null as File | null,
+  });
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [message, setMessage] = useState("");
 
   // ✅ Cargar usuarios existentes
   useEffect(() => {
     fetch("/api/user")
-      .then(res => res.json())
-      .then(data => setUsers(data));
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
   }, []);
 
   // ✅ Crear usuario
@@ -40,7 +41,6 @@ export default function AgentDashboard() {
     formData.append("email", form.email);
     formData.append("country", form.country);
     formData.append("totalAmount", String(form.totalAmount));
-
     if (form.legalDocumentFile) {
       formData.append("legalDocument", form.legalDocumentFile);
     }
@@ -49,12 +49,18 @@ export default function AgentDashboard() {
       method: "POST",
       body: formData,
     });
-
     const data = await res.json();
     if (res.ok) {
       alert("Usuario creado ✅");
-      setUsers(prev => [...prev, data]); // actualizar lista de usuarios
-      setForm(prev => ({ ...prev, name: "", curp: "", email: "", country: "", legalDocumentFile: null }));
+      setUsers((prev) => [...prev, data]);
+      setForm((prev) => ({
+        ...prev,
+        name: "",
+        curp: "",
+        email: "",
+        country: "",
+        legalDocumentFile: null,
+      }));
     } else {
       alert(data.error || "Error creando usuario");
     }
@@ -69,23 +75,23 @@ export default function AgentDashboard() {
     if (user.error) return alert("Usuario no encontrado");
 
     const resTx = await fetch("/api/transactions", {
-  method: "POST",
-  body: JSON.stringify({
-    reference: form.reference,
-    code: form.code,
-    amount: form.amount,
-    userId: user.id,
-    date: form.date ? new Date(form.date).toISOString() : null, // 👈 convertir al formato ISO
-  }),
-  headers: { "Content-Type": "application/json" },
-});
+      method: "POST",
+      body: JSON.stringify({
+        reference: form.reference,
+        code: form.code,
+        amount: form.amount,
+        userId: user.id,
+        date: form.date ? new Date(form.date).toISOString() : null,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
 
     const txData = await resTx.json();
     if (resTx.ok) alert("Transacción agregada ✅");
     else alert(txData.error || "Error agregando transacción");
   };
 
-  // ✅ Subir documento legal usando select de usuarios
+  // ✅ Subir documento legal
   const uploadLegalDocument = async () => {
     if (!selectedUser) return alert("Selecciona un usuario");
     if (!form.legalDocumentFile) return alert("Selecciona un PDF primero");
@@ -102,9 +108,25 @@ export default function AgentDashboard() {
     const data = await res.json();
     if (res.ok) {
       alert(`Documento agregado a ${selectedUser.name} ✅`);
-      setForm(prev => ({ ...prev, legalDocumentFile: null }));
+      setForm((prev) => ({ ...prev, legalDocumentFile: null }));
     } else {
       alert(data.error || "Error subiendo documento");
+    }
+  };
+
+  // ✅ Legalizar transacciones por CURP
+  const legalizeTransactions = async () => {
+    if (!selectedUser) return alert("Selecciona un usuario primero");
+
+    const res = await fetch(`/api/legalize/${selectedUser.curp}`, {
+      method: "POST",
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      setMessage(`✅ ${data.count} transacciones legalizadas para ${selectedUser.name}`);
+    } else {
+      setMessage(`❌ Error: ${data.error || "No se pudieron legalizar"}`);
     }
   };
 
@@ -127,34 +149,46 @@ export default function AgentDashboard() {
       <input className="input mb-2" placeholder="CURP del usuario" value={form.curp} onChange={(e) => setForm({ ...form, curp: e.target.value })} />
       <input className="input mb-2" placeholder="Reference" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
       <input className="input mb-2" placeholder="Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-      <input
-  className="input mb-2"
-  type="datetime-local"
-  value={form.date}
-  onChange={(e) => setForm({ ...form, date: e.target.value })}
-/>
+      <input className="input mb-2" type="datetime-local" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
       <input className="input mb-2" type="number" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} />
       <button onClick={createTransaction} className="button mt-2">Agregar Transacción</button>
 
-      {/* Subir Documento Legal */}
+      {/* Subir Documento Legal + Legalizar */}
       <h2 className="font-bold mt-6">Agregar Documento Legal</h2>
       <select
-  className="input mb-2"
-  value={selectedUser?.id ?? ""}
-  onChange={(e) => {
-    const user = users.find(u => u.id === Number(e.target.value));
-    setSelectedUser(user ?? null);
-  }}
->
-  <option value="">-- Selecciona un usuario --</option>
-  {users.map(u => (
-    <option key={u.id} value={u.id}>
-      {u.name} ({u.curp})
-    </option>
-  ))}
-</select>
-      <input type="file" accept="application/pdf" className="input mb-2" onChange={(e) => { const file = e.target.files?.[0]; if (file) setForm({ ...form, legalDocumentFile: file }); }} />
-      <button onClick={uploadLegalDocument} className="button mt-2">Subir Documento</button>
+        className="input mb-2"
+        value={selectedUser?.id ?? ""}
+        onChange={(e) => {
+          const user = users.find((u) => u.id === Number(e.target.value));
+          setSelectedUser(user ?? null);
+        }}
+      >
+        <option value="">-- Selecciona un usuario --</option>
+        {users.map((u) => (
+          <option key={u.id} value={u.id}>
+            {u.name} ({u.curp})
+          </option>
+        ))}
+      </select>
+
+      <input
+        type="file"
+        accept="application/pdf"
+        className="input mb-2"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) setForm({ ...form, legalDocumentFile: file });
+        }}
+      />
+      <button onClick={uploadLegalDocument} className="button mt-2">
+        Subir Documento
+      </button>
+
+      <button onClick={legalizeTransactions} className="button mt-3 bg-green-700 hover:bg-green-800">
+        Legalizar Transacciones
+      </button>
+
+      {message && <p className="mt-3 text-sm">{message}</p>}
     </div>
   );
 }

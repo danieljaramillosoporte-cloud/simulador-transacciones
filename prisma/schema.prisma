@@ -16,9 +16,10 @@ model User {
   createdAt       DateTime      @default(now())
   totalAmount     Float         @default(10000)  
   transactions    Transaction[]
-
-  // 👉 Nuevo campo
-  legalDocumentUrl String?      // 👈 aquí guardamos la ruta del PDF
+  legalDocumentUrl String?      
+  
+  // Nuevo campo para legalización
+  isLegalized     Boolean       @default(false)  // 👈 YES/NO
 }
 
 

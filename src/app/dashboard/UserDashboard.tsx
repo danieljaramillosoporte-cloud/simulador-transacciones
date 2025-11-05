@@ -19,6 +19,7 @@ interface User {
   country?: string;
   totalAmount?: number;
   legalDocumentUrl?: string;
+  isLegalized?: boolean; // ✅ Nuevo campo
 }
 
 export default function UserDashboard({ curp }: { curp: string }) {
@@ -313,7 +314,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
     <div>{tx.code}</div>
     <div>{tx.amount.toLocaleString()}</div>
     <div>{formatDate(tx.date)}</div>
-    <div>{tx.legalized ? "YES" : "NO"}</div>
+    <div>{user.isLegalized ? "YES" : "NO"}</div>
   </div>
 ))}
 
@@ -327,9 +328,10 @@ export default function UserDashboard({ curp }: { curp: string }) {
     <div>{typedTransaction.code}</div>
     <div>{typedTransaction.amount}</div>
     <div>—</div>
-    <div>NO</div>
+    <div>{user.isLegalized ? "YES" : "NO"}</div>
   </div>
 )}
+
 
           </div>
 
