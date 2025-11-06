@@ -303,37 +303,51 @@ export default function UserDashboard({ curp }: { curp: string }) {
 </div>
 
           <div className="mt-2">
-            {transactions.map((tx, idx) => (
-  <div
-    key={idx}
-    className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
-      idx % 2 === 0 ? "bg-white/5" : "bg-transparent"
-    }`}
-  >
-    <div>{tx.reference}</div>
-    <div>{tx.code}</div>
-    <div>{tx.amount.toLocaleString()}</div>
-    <div>{formatDate(tx.date)}</div>
-    <div>{user.isLegalized ? "YES" : "NO"}</div>
-  </div>
-))}
+  {transactions.map((tx, idx) => (
+    <div
+      key={idx}
+      className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+        idx % 2 === 0 ? "bg-white/5" : "bg-transparent"
+      }`}
+    >
+      <div>{tx.reference}</div>
+      <div>{tx.code}</div>
+      <div>{tx.amount.toLocaleString()}</div>
+      <div>{formatDate(tx.date)}</div>
+      <div>
+        {tx.legalized !== undefined
+          ? tx.legalized
+            ? "YES"
+            : "NO"
+          : user.isLegalized
+          ? "YES"
+          : "NO"}
+      </div>
+    </div>
+  ))}
 
-            {currentTransaction && (
-  <div
-    className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
-      transactions.length % 2 === 0 ? "bg-white/5" : "bg-transparent"
-    }`}
-  >
-    <div>{typedTransaction.reference}</div>
-    <div>{typedTransaction.code}</div>
-    <div>{typedTransaction.amount}</div>
-    <div>—</div>
-    <div>{user.isLegalized ? "YES" : "NO"}</div>
-  </div>
-)}
-
-
-          </div>
+  {currentTransaction && (
+    <div
+      className={`grid grid-cols-5 min-w-[600px] gap-4 font-mono py-1 border border-white/10 rounded-sm ${
+        transactions.length % 2 === 0 ? "bg-white/5" : "bg-transparent"
+      }`}
+    >
+      <div>{typedTransaction.reference}</div>
+      <div>{typedTransaction.code}</div>
+      <div>{typedTransaction.amount}</div>
+      <div>—</div>
+      <div>
+        {currentTransaction.legalized !== undefined
+          ? currentTransaction.legalized
+            ? "YES"
+            : "NO"
+          : user.isLegalized
+          ? "YES"
+          : "NO"}
+      </div>
+    </div>
+  )}
+</div>
 
           <div className="mt-4 font-bold text-right text-lg">
             Total: ${accumulated.toLocaleString()}
