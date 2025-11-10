@@ -130,6 +130,59 @@ export default function AgentDashboard() {
     }
   };
 
+  const resetBalance = async () => {
+  if (!selectedUser) return alert("Selecciona un usuario primero");
+
+  const confirmReset = confirm(
+    `¿Seguro que deseas volver el balance de ${selectedUser.name} a 0?`
+  );
+  if (!confirmReset) return;
+
+  // Obtener el usuario con balance actual
+  const resUser = await fetch(`/api/user/${selectedUser.curp}`);
+  const user = await resUser.json();
+  if (user.error) return alert("Usuario no encontrado");
+
+  // Crear transacción negativa por el total actual
+  const negativeAmount = -Math.abs(user.totalAmount || 0);
+  if (negativeAmount === 0) return alert("El balance ya es 0");
+
+  const resTx = await fetch("/api/transactions", {
+    method: "POST",
+    body: JSON.stringify({
+      reference: "RESET_BALANCE",
+      code: "AUTO_RESET",
+      amount: negativeAmount,
+      userId: user.id,
+      date: new Date().toISOString(),
+    }),
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const txData = await resTx.json();
+  if (!resTx.ok) return alert(txData.error || "Error creando transacción negativa");
+
+  // Actualizar balance del usuario a 0
+  const resUpdate = await fetch(`/api/user/${selectedUser.curp}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ totalAmount: 0 }),
+  });
+  const updateData = await resUpdate.json();
+
+  if (resUpdate.ok) {
+    alert(`Balance de ${selectedUser.name} reiniciado a 0 ✅`);
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id ? { ...u, totalAmount: 0 } : u
+      )
+    );
+  } else {
+    alert(updateData.error || "Error actualizando balance");
+  }
+};
+
+
   return (
     <div className="p-8 max-w-md mx-auto box">
       <h1 className="text-xl font-bold mb-4">Panel de Agente</h1>
@@ -187,6 +240,12 @@ export default function AgentDashboard() {
       <button onClick={legalizeTransactions} className="button mt-3 bg-green-700 hover:bg-green-800">
         Legalizar Transacciones
       </button>
+      <button
+  onClick={resetBalance}
+  className="button mt-3 bg-red-700 hover:bg-red-800"
+>
+  Volver Balance 0
+</button>
 
       {message && <p className="mt-3 text-sm">{message}</p>}
     </div>
