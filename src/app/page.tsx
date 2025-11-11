@@ -45,7 +45,7 @@ export default function Login() {
       }
 
       // 👇 texto en verde con HTML inline
-      await typeWriter('<span style="color: limegreen;">✅ Usuario encontrado</span>');
+      await typeWriter('<span style="color: limegreen;"> Usuario encontrado</span>');
       await typeWriter("Generando información");
       await animatedDots(5, 150);
 
