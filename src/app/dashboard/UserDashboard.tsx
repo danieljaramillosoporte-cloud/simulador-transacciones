@@ -20,7 +20,6 @@ interface User {
   totalAmount?: number;
   legalDocumentUrl?: string;
   isLegalized?: boolean; // ✅ Nuevo campo
-  transactions?: Transaction[]; 
 }
 
 export default function UserDashboard({ curp }: { curp: string }) {
@@ -70,24 +69,20 @@ export default function UserDashboard({ curp }: { curp: string }) {
   );
 
   useEffect(() => {
-  fetch(`/api/user/${curp}`)
-    .then((res) => res.json())
-    .then((data) => {
-      if (!data.error) {
-        setUser(data);
-        if (data.transactions) setTransactions(data.transactions);
-      }
-    });
-}, [curp]);
-
+    fetch(`/api/user/${curp}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.error) setUser(data);
+      });
+  }, [curp]);
 
   useEffect(() => {
     if (!user || !finishedBoxes) return;
 
     const fetchTransactions = async () => {
-  try {
-    const data: Transaction[] = user.transactions || [];
-
+      try {
+        const res = await fetch(`/api/transactions?curp=${user.curp}`);
+        const data: Transaction[] = await res.json();
 
         let txs: Transaction[] = [];
 
