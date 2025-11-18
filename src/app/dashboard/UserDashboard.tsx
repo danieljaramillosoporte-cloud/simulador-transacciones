@@ -194,7 +194,7 @@ export default function UserDashboard({ curp }: { curp: string }) {
           <div className="border-b border-white/20 pb-2 mb-2 text-center md:text-left">
             <Typewriter
               onInit={(tw) => {
-                tw.typeString("Federal Trade Commission<br/>Protecting consumers")
+                tw.typeString("international tracking system<br/>Protecting consumers")
                   .pauseFor(500)
                   .start();
               }}
